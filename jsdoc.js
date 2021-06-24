@@ -450,17 +450,17 @@ module.exports = async function(input) {
 	if(typeof input !== "string" && !(input instanceof Array)) throw new TypeError(`Invalid file path '${input}', expected string or array of strings`);
 
 	const files = await getInputFiles(input);
-	const REGEX = await initRegex();
+	const regex = await initRegex();
 	const parsed = [];
 
 	console.log(files);
 
 
 	for(const file of files) {
-		parsed.push(parseFile(file, REGEX));
+		parsed.push(parseFile(file, regex));
 	}
 
-	freeRegex(REGEX);
+	freeRegex(regex);
 
 	return parsed;
 };

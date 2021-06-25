@@ -45,6 +45,7 @@ async function initRegex() {
 	REGEX.jsdoc_tag_hideconstructor = String.raw`@hideconstructor`;
 	REGEX.jsdoc_tag_ignore = String.raw`@ignore`;
 	REGEX.jsdoc_tag_license = String.raw`${REGEX.jsdoc_padding}@license\s+(?<desc>${REGEX.js_tag_description})`;
+	REGEX.jsdoc_tag_since = String.raw`@since\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_static = String.raw`@static`;
 	REGEX.jsdoc_tag_readonly = String.raw`@readonly`;
 	REGEX.jsdoc_tag_return = String.raw`@returns?\s+(?<type>${REGEX.js_type})(?<desc>${REGEX.js_tag_description})`;
@@ -192,6 +193,14 @@ function parseFile(path, REGEX) {
 				const desc = match?.["desc"]?.match?.replace(new RegExp(escapeRegExp(padding), "g"), "\n")?.trim();
 
 				src["license"] = desc || null;
+			}
+		}
+		{
+			const match = REGEX.jsdoc_tag_since.match(jsdoc);
+			const desc = match?.["desc"]?.match?.trim();
+
+			if(match) {
+				src["since"] = desc || null;
 			}
 		}
 		{

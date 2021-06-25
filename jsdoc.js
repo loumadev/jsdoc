@@ -33,7 +33,6 @@ async function initRegex() {
 	REGEX.jsdoc_description = String.raw`\/\*\*\s*?\*(?!\s*?@)(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_parameter = String.raw`@param(?:eter)?\s+(?<type>${REGEX.js_type})\s+(?:(?<optional>${REGEX.js_parameter_optional})|(?<name>${REGEX.js_name}))(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_type = String.raw`@type\s+(?<type>${REGEX.js_type})`;
-	REGEX.jsdoc_deprecated = String.raw`@deprecated\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_padding = String.raw`(?<padding>\s*\*)\s*`;
 
 	REGEX.jsdoc_tag_access = String.raw`@(access\s+)?(?<access>package|private|protected|public)`;
@@ -46,6 +45,7 @@ async function initRegex() {
 	REGEX.jsdoc_tag_ignore = String.raw`@ignore`;
 	REGEX.jsdoc_tag_license = String.raw`${REGEX.jsdoc_padding}@license\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_since = String.raw`@since\s+(?<desc>${REGEX.js_tag_description})`;
+	REGEX.jsdoc_tag_deprecated = String.raw`@deprecated\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_static = String.raw`@static`;
 	REGEX.jsdoc_tag_readonly = String.raw`@readonly`;
 	REGEX.jsdoc_tag_class = String.raw`@(class|constructor)`;
@@ -203,6 +203,14 @@ function parseFile(path, REGEX) {
 
 			if(match) {
 				src["since"] = desc || null;
+			}
+		}
+		{
+			const match = REGEX.jsdoc_tag_deprecated.match(jsdoc);
+			const desc = match?.["desc"]?.match?.trim();
+
+			if(match) {
+				src["deprecated"] = desc || null;
 			}
 		}
 		{
@@ -378,13 +386,11 @@ function parseFile(path, REGEX) {
 		cls.properties.forEach(prop => {
 			prop.type = REGEX.jsdoc_type.match(prop._jsdoc)?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim() || "any";
 			prop.desc = REGEX.jsdoc_description.match(prop._jsdoc)?.["desc"]?.match?.trim() || null;
-			prop.deprecated = REGEX.jsdoc_deprecated.match(prop._jsdoc)?.["desc"]?.match?.trim() || null;
 
 			addTagsFromJSdoc(prop, prop._jsdoc);
 		});
 		cls.methods.forEach(met => {
 			met.desc = REGEX.jsdoc_description.match(met._jsdoc)?.["desc"]?.match?.trim() || null;
-			met.deprecated = REGEX.jsdoc_deprecated.match(met._jsdoc)?.["desc"]?.match?.trim() || null;
 
 			met.params = matchParameters(met._jsdoc);
 

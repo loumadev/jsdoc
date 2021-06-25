@@ -33,7 +33,6 @@ async function initRegex() {
 	REGEX.jsdoc_description = String.raw`\/\*\*\s*?\*(?!\s*?@)(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_parameter = String.raw`@param(?:eter)?\s+(?<type>${REGEX.js_type})\s+(?:(?<optional>${REGEX.js_parameter_optional})|(?<name>${REGEX.js_name}))(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_type = String.raw`@type\s+(?<type>${REGEX.js_type})`;
-	REGEX.jsdoc_return = String.raw`@returns?\s+(?<type>${REGEX.js_type})(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_deprecated = String.raw`@deprecated\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_padding = String.raw`(?<padding>\s*\*)\s*`;
 
@@ -48,6 +47,7 @@ async function initRegex() {
 	REGEX.jsdoc_tag_license = String.raw`${REGEX.jsdoc_padding}@license\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_static = String.raw`@static`;
 	REGEX.jsdoc_tag_readonly = String.raw`@readonly`;
+	REGEX.jsdoc_tag_return = String.raw`@returns?\s+(?<type>${REGEX.js_type})(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_throws = String.raw`@(throws|exception)?\s+(?<type>${REGEX.js_type})?(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_todo = String.raw`@todo\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_version = String.raw`@version\s+(?<desc>${REGEX.js_tag_description})`;
@@ -200,6 +200,18 @@ function parseFile(path, REGEX) {
 
 			if(match) {
 				src["version"] = desc || null;
+			}
+		}
+		{
+			const match = REGEX.jsdoc_tag_return.match(jsdoc);
+			const type = match?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim();
+			const desc = match?.["desc"]?.match?.trim();
+
+			if(match) {
+				src["return"] = {
+					type: type || null,
+					desc: desc || null
+				};
 			}
 		}
 		{
@@ -363,16 +375,6 @@ function parseFile(path, REGEX) {
 			met.deprecated = REGEX.jsdoc_deprecated.match(met._jsdoc)?.["desc"]?.match?.trim() || null;
 
 			met.params = matchParameters(met._jsdoc);
-
-			// met.returns = REGEX.jsdoc_return.matchAll(met._jsdoc).map(e => ({
-			// 	type: e?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim(),
-			// 	desc: e?.["desc"]?.match?.trim() || null
-			// }));
-			var match = REGEX.jsdoc_return.match(met._jsdoc);
-			met.return = {
-				type: match?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim() || "void",
-				desc: match?.["desc"]?.match?.trim() || null
-			};
 
 			addTagsFromJSdoc(met, met._jsdoc);
 		});

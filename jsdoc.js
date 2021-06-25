@@ -48,6 +48,7 @@ async function initRegex() {
 	REGEX.jsdoc_tag_since = String.raw`@since\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_static = String.raw`@static`;
 	REGEX.jsdoc_tag_readonly = String.raw`@readonly`;
+	REGEX.jsdoc_tag_class = String.raw`@(class|constructor)`;
 	REGEX.jsdoc_tag_return = String.raw`@returns?\s+(?<type>${REGEX.js_type})(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_throws = String.raw`@(throws|exception)?\s+(?<type>${REGEX.js_type})?(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_todo = String.raw`@todo\s+(?<desc>${REGEX.js_tag_description})`;
@@ -164,6 +165,7 @@ function parseFile(path, REGEX) {
 		addTag(src, "ignore", REGEX.jsdoc_tag_ignore.match(jsdoc));
 		addTag(src, "static", REGEX.jsdoc_tag_static.match(jsdoc));
 		addTag(src, "readonly", REGEX.jsdoc_tag_readonly.match(jsdoc));
+		addTag(src, "class", REGEX.jsdoc_tag_class.match(jsdoc));
 
 		const access = REGEX.jsdoc_tag_access.match(jsdoc);
 		addTag(src, access?.["access"]?.match?.trim(), access);
@@ -334,6 +336,7 @@ function parseFile(path, REGEX) {
 		cls._body = buffer;
 		cls.desc = REGEX.jsdoc_description.match(cls._jsdoc)?.["desc"]?.match?.trim() || null;
 
+		addTag(cls, "class");
 		addTag(cls, "static", !/constructor\(.*?\)\s*{/.test(cls._body));
 
 		if(!hasTag(cls, "static")) {

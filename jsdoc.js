@@ -46,6 +46,7 @@ async function initRegex() {
 	REGEX.jsdoc_tag_license = String.raw`${REGEX.jsdoc_padding}@license\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_since = String.raw`@since\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_deprecated = String.raw`@deprecated\s+(?<desc>${REGEX.js_tag_description})`;
+	REGEX.jsdoc_tag_requires = String.raw`@requires\s+(?<module>\S+)(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_static = String.raw`@static`;
 	REGEX.jsdoc_tag_readonly = String.raw`@readonly`;
 	REGEX.jsdoc_tag_class = String.raw`@(class|constructor)`;
@@ -211,6 +212,15 @@ function parseFile(path, REGEX) {
 
 			if(match) {
 				src["deprecated"] = desc || null;
+			}
+		}
+		{
+			const match = REGEX.jsdoc_tag_requires.match(jsdoc);
+			const module = match?.["module"]?.match?.trim();
+			const desc = match?.["desc"]?.match?.trim();
+
+			if(match) {
+				src["requires"] = module || null;
 			}
 		}
 		{

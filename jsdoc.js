@@ -47,6 +47,7 @@ async function initRegex() {
 	REGEX.jsdoc_tag_ignore = String.raw`@ignore`;
 	REGEX.jsdoc_tag_license = String.raw`${REGEX.jsdoc_padding}@license\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_static = String.raw`@static`;
+	REGEX.jsdoc_tag_readonly = String.raw`@readonly`;
 	REGEX.jsdoc_tag_throws = String.raw`@(throws|exception)?\s+(?<type>${REGEX.js_type})?(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_todo = String.raw`@todo\s+(?<desc>${REGEX.js_tag_description})`;
 	REGEX.jsdoc_tag_version = String.raw`@version\s+(?<desc>${REGEX.js_tag_description})`;
@@ -161,6 +162,7 @@ function parseFile(path, REGEX) {
 		addTag(src, "hideconstructor", REGEX.jsdoc_tag_hideconstructor.match(jsdoc));
 		addTag(src, "ignore", REGEX.jsdoc_tag_ignore.match(jsdoc));
 		addTag(src, "static", REGEX.jsdoc_tag_static.match(jsdoc));
+		addTag(src, "readonly", REGEX.jsdoc_tag_readonly.match(jsdoc));
 
 		const access = REGEX.jsdoc_tag_access.match(jsdoc);
 		addTag(src, access?.["access"]?.match?.trim(), access);

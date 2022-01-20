@@ -410,9 +410,10 @@ function parseFile(path, REGEX) {
 
 	return file;
 
-	fs.writeFileSync(__dirname + "/output.json", JSON.stringify(classes, null, "\t"));
+	//fs.writeFileSync(__dirname + "/output.json", JSON.stringify(classes, null, "\t"));
+}
 
-
+function generateMarkup(files) {
 	function formatType(type) {
 		return type;
 		//return classes.find(e => e.name == type) ? `[\`${type}\`](#${type})` : type;
@@ -424,16 +425,17 @@ function parseFile(path, REGEX) {
 		return e.map(t => `\`${t.name}: ${formatType(t.type)}\` | ${t.desc || "_No description_"}`).join("\n");
 	}
 
-
-
 	var str = ``;
 
-	for(const cls of classes) {
-		str += `## Class \`${cls.name}\`
+	for(const file of files) {
+
+		for(const cls of file.classes) {
+			str += `## Class \`${cls.name}\`
 ${cls.extends ? `Subclass of \`${formatType(cls.extends)}\`\n` : ""}
 ${cls.desc || "_This class does not contain any description_\n"}
 
 ### Constructor
+${cls.construct ? `
 ${cls.construct.desc || ""}
 \`\`\`typescript
 ${formatMethod(cls.construct)}
@@ -443,6 +445,7 @@ Parameter | Description
 --- | ---
 ${formatParameters(cls.construct.params)}
 ` : ""}
+` : "_This class has no constructor_\n"}
 
 
 ### Properties
@@ -468,6 +471,8 @@ ${e.params.length ? `Parameter | Description
 
 
 `;
+		}
+		str += "\n";
 	}
 
 	fs.writeFileSync(__dirname + "/output.md", str);
@@ -491,6 +496,8 @@ module.exports = async function(input) {
 	for(const file of files) {
 		parsed.push(parseFile(file, regex));
 	}
+
+	generateMarkup(parsed);
 
 	freeRegex(regex);
 

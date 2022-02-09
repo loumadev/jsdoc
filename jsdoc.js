@@ -135,7 +135,11 @@ async function getInputFiles(input) {
  */
 function parseFile(path, REGEX) {
 	function escapeRegExp(string) {
-		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		return (string || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	}
+
+	function parseDescription(match) {
+		return match?.["desc"]?.match?.replaceAll(/^[\t ]*\* ?/gm, "").replaceAll(/\r\n/g, "\n")?.trim() || null;
 	}
 
 	function addTag(src, tag, state = true) {
@@ -174,7 +178,7 @@ function parseFile(path, REGEX) {
 		//Props
 		{
 			const match = REGEX.jsdoc_tag_author.match(jsdoc);
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["author"] = desc || null;
@@ -182,7 +186,7 @@ function parseFile(path, REGEX) {
 		}
 		{
 			const match = REGEX.jsdoc_tag_copyright.match(jsdoc);
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["copyright"] = desc || null;
@@ -200,7 +204,7 @@ function parseFile(path, REGEX) {
 		}
 		{
 			const match = REGEX.jsdoc_tag_since.match(jsdoc);
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["since"] = desc || null;
@@ -208,7 +212,7 @@ function parseFile(path, REGEX) {
 		}
 		{
 			const match = REGEX.jsdoc_tag_deprecated.match(jsdoc);
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["deprecated"] = desc || null;
@@ -217,7 +221,7 @@ function parseFile(path, REGEX) {
 		{
 			const match = REGEX.jsdoc_tag_requires.match(jsdoc);
 			const module = match?.["module"]?.match?.trim();
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["requires"] = module || null;
@@ -225,7 +229,7 @@ function parseFile(path, REGEX) {
 		}
 		{
 			const match = REGEX.jsdoc_tag_version.match(jsdoc);
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["version"] = desc || null;
@@ -234,7 +238,7 @@ function parseFile(path, REGEX) {
 		{
 			const match = REGEX.jsdoc_tag_return.match(jsdoc);
 			const type = match?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim();
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["return"] = {
@@ -246,7 +250,7 @@ function parseFile(path, REGEX) {
 		{
 			const match = REGEX.jsdoc_tag_yields.match(jsdoc);
 			const type = match?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim();
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["yields"] = {
@@ -258,7 +262,7 @@ function parseFile(path, REGEX) {
 		{
 			const match = REGEX.jsdoc_tag_throws.match(jsdoc);
 			const type = match?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim();
-			const desc = match?.["desc"]?.match?.trim();
+			const desc = parseDescription(match);
 
 			if(match) {
 				src["throws"] = {
@@ -268,7 +272,7 @@ function parseFile(path, REGEX) {
 			}
 		}
 		{
-			const todos = REGEX.jsdoc_tag_todo.matchAll(jsdoc).map(e => e?.["desc"]?.match?.trim() || null).filter(e => e);
+			const todos = REGEX.jsdoc_tag_todo.matchAll(jsdoc).map(e => parseDescription(e)).filter(e => e);
 			src["todo"] = todos;
 		}
 
@@ -290,7 +294,7 @@ function parseFile(path, REGEX) {
 			const obj = {
 				name: name,
 				type: e?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim() || "any",
-				desc: e?.["desc"]?.match?.trim() || null,
+				desc: parseDescription(e),
 				defaultValue: defaultValue,
 				tags: []
 			};
@@ -306,7 +310,7 @@ function parseFile(path, REGEX) {
 
 		const obj = {
 			name: "constructor",
-			desc: REGEX.jsdoc_description.match(jsdoc)?.["desc"]?.match?.trim() || null,
+			desc: parseDescription(REGEX.jsdoc_description.match(jsdoc)),
 			deprecated: null,
 			params: matchParameters(jsdoc),
 			return: {
@@ -352,7 +356,7 @@ function parseFile(path, REGEX) {
 		const buffer = matchBlock(content, cls._index + cls._length);
 
 		cls._body = buffer;
-		cls.desc = REGEX.jsdoc_description.match(cls._jsdoc)?.["desc"]?.match?.trim() || null;
+		cls.desc = parseDescription(REGEX.jsdoc_description.match(cls._jsdoc));
 
 		addTag(cls, "class");
 		addTag(cls, "static", !/constructor\(.*?\)\s*{/.test(cls._body));
@@ -395,12 +399,12 @@ function parseFile(path, REGEX) {
 
 		cls.properties.forEach(prop => {
 			prop.type = REGEX.jsdoc_type.match(prop._jsdoc)?.["type"]?.match?.slice(1, -1)?.replace(/\s{2,}/g, " ")?.trim() || "any";
-			prop.desc = REGEX.jsdoc_description.match(prop._jsdoc)?.["desc"]?.match?.trim() || null;
+			prop.desc = parseDescription(REGEX.jsdoc_description.match(prop._jsdoc));
 
 			addTagsFromJSdoc(prop, prop._jsdoc);
 		});
 		cls.methods.forEach(met => {
-			met.desc = REGEX.jsdoc_description.match(met._jsdoc)?.["desc"]?.match?.trim() || null;
+			met.desc = parseDescription(REGEX.jsdoc_description.match(met._jsdoc));
 
 			met.params = matchParameters(met._jsdoc);
 
@@ -414,15 +418,23 @@ function parseFile(path, REGEX) {
 }
 
 function generateMarkup(files) {
-	function formatType(type) {
+	function formatType(type, options = {
+		escape: false
+	}) {
+		if(options.escape) {
+			return type.replace(/\s*\|\s*/g, " \\| ");
+		}
 		return type;
 		//return classes.find(e => e.name == type) ? `[\`${type}\`](#${type})` : type;
 	}
 	function formatMethod(e) {
-		return `${e.isStatic ? "static " : ""}${e.isAsync ? "async " : ""}${e.name}(${e.params.map(t => `${t.name}: ${formatType(t.type)}`).join(", ")}): ${formatType(e.return.type)}`;
+		return `${e.tags.includes("static") ? "static " : ""}${e.tags.includes("async") ? "async " : ""}${e.name}(${e.params.map(t => `${t.name}: ${formatType(t.type)}`).join(", ")}): ${formatType(e.return.type)}`;
 	}
 	function formatParameters(e) {
-		return e.map(t => `\`${t.name}: ${formatType(t.type)}\` | ${t.desc || "_No description_"}`).join("\n");
+		return e.map(t => `\`${t.name}: ${formatType(t.type, {escape: true})}\` | ${formatDescription(t) || "_No description_"}`).join("\n");
+	}
+	function formatDescription(e) {
+		return (e.desc && e.desc.replace(/\n/g, "<br>").trim()) || "";
 	}
 
 	var str = ``;
@@ -432,11 +444,10 @@ function generateMarkup(files) {
 		for(const cls of file.classes) {
 			str += `## Class \`${cls.name}\`
 ${cls.extends ? `Subclass of \`${formatType(cls.extends)}\`\n` : ""}
-${cls.desc || "_This class does not contain any description_\n"}
+${formatDescription(cls) || "_This class does not contain any description_\n"}
 
-### Constructor
-${cls.construct ? `
-${cls.construct.desc || ""}
+${cls.construct ? `### Constructor
+${formatDescription(cls.construct)}
 \`\`\`typescript
 ${formatMethod(cls.construct)}
 \`\`\`
@@ -445,13 +456,14 @@ Parameter | Description
 --- | ---
 ${formatParameters(cls.construct.params)}
 ` : ""}
-` : "_This class has no constructor_\n"}
+` : ""}
 
 
-### Properties
+${cls.properties.length ? `### Properties
 Property | Description
 --- | ---
-${cls.properties.map(e => `\`${e.name}: ${formatType(e.type)}\` | ${e.desc || "_No description_"}`).join("\n") || "_This class does not contain any properties_\n"}
+${cls.properties.map(e => `\`${e.name}: ${formatType(e.type, {escape: true})}\` | ${formatDescription(e) || "_No description_"}`).join("\n") || "_This class does not contain any properties_\n"}
+` : ""}
 
 
 ### Methods
@@ -459,6 +471,7 @@ ${cls.methods.map(e => `#### ${cls.name}.${e.name}()
 \`\`\`typescript
 ${formatMethod(e)}
 \`\`\`
+${formatDescription(e) || "_This method does not contain any description_\n"}
 
 
 ##### Parameters
@@ -496,6 +509,8 @@ module.exports = async function(input) {
 	for(const file of files) {
 		parsed.push(parseFile(file, regex));
 	}
+
+	//console.dir(parsed.map(e => e.classes?.[0]?.methods), {depth: null});
 
 	generateMarkup(parsed);
 

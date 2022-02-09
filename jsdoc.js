@@ -488,7 +488,12 @@ ${e.params.length ? `Parameter | Description
 		str += "\n";
 	}
 
+	//Minify the output
+	str = str.replace(/\r/g, "").replace(/\n{3,}/g, "\n\n\n");
+
 	fs.writeFileSync(__dirname + "/output.md", str);
+
+	return str;
 }
 
 /**
